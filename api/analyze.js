@@ -1,13 +1,19 @@
-// Vercel Serverless Function — Gemini 2.5 Flash 연동
-// 환경변수: GEMINI_API_KEY (Vercel 대시보드 → Settings → Environment Variables)
+// Vercel Serverless Function — Gemini 연동
+// 환경변수: GEMINI_API_KEY
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POST only' });
   }
 
-  const { image } = req.body;
-  if (!image) {
+  const body = req.body;
+  if (!body || !body.image) {
     return res.status(400).json({ error: 'image (base64) is required' });
   }
 
@@ -16,10 +22,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
   }
 
-  // base64 data URL에서 순수 base64 추출
-  const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+  // base64 data URL → 순수 base64
+  const base64Data = body.image.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
 
-  const prompt = `이 책 표지 이미지를 분석해서 다음 JSON 형식으로만 응답해주세요. 다른 텍스트 없이 JSON만 출력하세요.
+  const prompt = `이 책 표지 이미지를 분석해서 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트 없이 순수 JSON만 출력하세요.
 
 {
   "title": "책 제목",
@@ -36,12 +42,17 @@ export default async function handler(req, res) {
 }
 
 matchScore는 60~95 사이에서 책의 대중적 평가와 접근성을 고려해 정해주세요.
-태그는 한국어로, 2~4개 이내로 작성해주세요.`;
+태그는 한국어로, 2~4개 이내로 작성해주세요.
+verdict는 반말로 친근하게 작성해주세요.`;
 
-  try {
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
-      {
+  // 모델 목록 (순서대로 시도)
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
+
+      const geminiRes = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -53,32 +64,39 @@ matchScore는 60~95 사이에서 책의 대중적 평가와 접근성을 고려�
           }],
           generationConfig: {
             temperature: 0.3,
-            maxOutputTokens: 512,
-            responseMimeType: 'application/json'
+            maxOutputTokens: 512
           }
         })
+      });
+
+      if (!geminiRes.ok) {
+        const errText = await geminiRes.text();
+        console.error(`[${model}] Gemini HTTP ${geminiRes.status}:`, errText);
+        continue; // 다음 모델 시도
       }
-    );
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error('Gemini error:', errText);
-      return res.status(502).json({ error: 'AI API error' });
+      const geminiData = await geminiRes.json();
+      const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!text) {
+        console.error(`[${model}] Empty response:`, JSON.stringify(geminiData));
+        continue;
+      }
+
+      // JSON 추출 (```json ... ``` 감싸기 대응)
+      let jsonStr = text.trim();
+      if (jsonStr.startsWith('```')) {
+        jsonStr = jsonStr.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const bookData = JSON.parse(jsonStr);
+      return res.status(200).json(bookData);
+
+    } catch (err) {
+      console.error(`[${model}] Error:`, err.message);
+      continue;
     }
-
-    const geminiData = await geminiRes.json();
-    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      return res.status(502).json({ error: 'Empty AI response' });
-    }
-
-    // JSON 파싱
-    const bookData = JSON.parse(text);
-    return res.status(200).json(bookData);
-
-  } catch (err) {
-    console.error('Handler error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
   }
-}
+
+  return res.status(502).json({ error: 'All AI models failed' });
+};
