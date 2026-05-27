@@ -18,9 +18,7 @@ module.exports = async function handler(req, res) {
 
     const base64Data = body.image.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
 
-    const prompt = `이 책 표지 이미지를 분석해서 아래 JSON 형식으로만 응답하세요. JSON 외 텍스트 없이 순수 JSON만 출력하세요.
-{"title":"책 제목","author":"저자","year":"출판연도","tags":["태그1","태그2"],"matchScore":75,"matchReasons":["이유1","이유2","이유3"],"verdict":"한 줄 평가"}
-matchScore는 60~95 사이. 태그는 한국어 2~4개. verdict는 반말로 친근하게.`;
+    const prompt = `이 책 표지 이미지를 분석하세요. title은 책 제목, author는 저자, year는 출판연도(모르면 빈 문자열), tags는 한국어 장르 태그 2~4개, matchScore는 60~95 사이 정수, matchReasons는 이 책의 특징을 설명하는 한국어 문장 3개, verdict는 친근한 반말 한 줄 평가.`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
@@ -36,7 +34,21 @@ matchScore는 60~95 사이. 태그는 한국어 2~4개. verdict는 반말로 친
         }],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 512
+          maxOutputTokens: 1024,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'object',
+            properties: {
+              title:        { type: 'string' },
+              author:       { type: 'string' },
+              year:         { type: 'string' },
+              tags:         { type: 'array', items: { type: 'string' } },
+              matchScore:   { type: 'integer' },
+              matchReasons: { type: 'array', items: { type: 'string' } },
+              verdict:      { type: 'string' }
+            },
+            required: ['title', 'author', 'tags', 'matchScore', 'matchReasons', 'verdict']
+          }
         }
       })
     });
@@ -50,71 +62,45 @@ matchScore는 60~95 사이. 태그는 한국어 2~4개. verdict는 반말로 친
       });
     }
 
-    // Gemini 응답 파싱
     let geminiData;
     try {
       geminiData = JSON.parse(geminiText);
     } catch (e) {
       return res.status(502).json({
-        error: 'Gemini response parse failed',
+        error: 'Gemini response not JSON',
         detail: geminiText.slice(0, 500)
       });
     }
 
-    // 모든 parts에서 JSON 찾기 (2.5 Flash는 thinking part가 별도로 옴)
+    // 모든 parts에서 텍스트 수집 (thinking 파트 제외)
     const parts = geminiData.candidates?.[0]?.content?.parts || [];
-
-    if (parts.length === 0) {
-      return res.status(502).json({
-        error: 'Gemini returned no parts',
-        detail: JSON.stringify(geminiData).slice(0, 800)
-      });
-    }
-
-    // thinking이 아닌 파트들에서 텍스트 수집
-    let allText = '';
+    let outputText = '';
     for (const part of parts) {
-      if (part.thought) continue; // thinking 파트 건너뛰기
-      if (part.text) allText += part.text + '\n';
+      if (part.thought) continue;
+      if (part.text) outputText += part.text;
     }
 
-    // allText가 비어있으면 thinking 포함해서 다시 시도
-    if (!allText.trim()) {
-      for (const part of parts) {
-        if (part.text) allText += part.text + '\n';
-      }
-    }
-
-    if (!allText.trim()) {
+    if (!outputText) {
       return res.status(502).json({
-        error: 'No text in any part',
-        detail: JSON.stringify(parts).slice(0, 800)
-      });
-    }
-
-    // 코드블록 제거
-    let cleaned = allText.trim();
-    if (cleaned.includes('```')) {
-      cleaned = cleaned.replace(/```(?:json)?\s*/g, '').replace(/```/g, '');
-    }
-
-    // { } 사이 JSON 추출
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return res.status(502).json({
-        error: 'No JSON in output',
-        rawText: allText.slice(0, 800)
+        error: 'No output text',
+        detail: JSON.stringify(geminiData).slice(0, 800)
       });
     }
 
     let bookData;
     try {
-      bookData = JSON.parse(jsonMatch[0]);
+      bookData = JSON.parse(outputText);
     } catch (e) {
-      return res.status(502).json({
-        error: 'JSON parse failed: ' + e.message,
-        rawJson: jsonMatch[0].slice(0, 800)
-      });
+      // JSON이 깨졌으면 { } 추출 시도
+      const m = outputText.match(/\{[\s\S]*\}/);
+      if (m) {
+        bookData = JSON.parse(m[0]);
+      } else {
+        return res.status(502).json({
+          error: 'Output not parseable',
+          rawText: outputText.slice(0, 800)
+        });
+      }
     }
 
     return res.status(200).json(bookData);
