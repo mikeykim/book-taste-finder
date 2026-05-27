@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F7F5">
+<title>내 책 취향 찾기</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --white:#fff;--bg:#F7F7F5;--card:#fff;
+  --text:#37352F;--text2:#787774;--text3:#B4B4B0;
+  --border:#E3E2DE;--hover:#F1F1EF;
+  --pink:#FDE4E8;--mint:#D9F0E2;--peach:#FFE9D4;
+  --lavender:#E8E0F6;--sky:#D8EAF4;--butter:#FFF2CC;
+  --coral:#FACEBE;--sage:#D2E5CB;
+  --char-body:#FDF0E4;--char-blush:#F7C9BA;
+  --r-s:14px;--r-m:20px;--r-l:28px;--r-pill:50px;
+  --sh-s:0 1px 3px rgba(0,0,0,.06);
+  --sh-m:0 2px 8px rgba(0,0,0,.07);
+  --sh-l:0 4px 16px rgba(0,0,0,.08);
+  --pastel-pool:var(--pink),var(--mint),var(--peach),var(--lavender),var(--sky),var(--butter),var(--coral),var(--sage);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  height:100%;width:100%;overflow:hidden;
+  background:var(--bg);
+  font-family:'Gowun Dodum','Apple SD Gothic Neo',sans-serif;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+#app{
+  max-width:430px;margin:0 auto;height:100%;
+  display:flex;flex-direction:column;
+  background:var(--card);
+  position:relative;overflow:hidden;
+}
+
+/* ====== SCREENS ====== */
+.screen{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:16px 16px 0;
+  display:none;flex-direction:column;
+  -webkit-overflow-scrolling:touch;
+}
+.screen.active{display:flex;}
+.screen-title{font-family:'Jua',sans-serif;font-size:1.4rem;font-weight:400;margin-bottom:2px;}
+.screen-sub{font-size:.78rem;color:var(--text2);margin-bottom:12px;}
+
+/* ====== BOTTOM NAV ====== */
+#bottom-nav{
+  flex-shrink:0;
+  display:flex;justify-content:space-around;align-items:center;
+  background:var(--card);
+  padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+  box-shadow:0 -1px 6px rgba(0,0,0,.06);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  background:none;border:none;
+  font-family:'Gowun Dodum',sans-serif;font-size:.65rem;
+  color:var(--text3);cursor:pointer;
+  padding:4px 12px;border-radius:var(--r-m);
+  transition:background .15s;
+}
+.nav-btn.active{color:var(--text);}
+.nav-btn .ic{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;transition:background .15s;
+}
+.nav-btn.active .ic{background:var(--hover);}
+
+/* ====== 1. CAPTURE SCREEN ====== */
+#screen-capture{padding:16px 16px 0;justify-content:flex-start;}
+.capture-header{text-align:center;margin-bottom:10px;}
+.capture-header h1{font-family:'Jua',sans-serif;font-size:1.35rem;font-weight:400;}
+.capture-header p{font-size:.78rem;color:var(--text2);margin-top:2px;}
+
+.camera-wrap{
+  position:relative;flex:1;min-height:0;
+  border-radius:var(--r-l);overflow:hidden;
+  background:#000;margin-bottom:12px;
+}
+#camera-feed{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+}
+.camera-wrap .corner{position:absolute;width:28px;height:28px;border:2.5px solid rgba(255,255,255,.6);}
+.corner.tl{top:14px;left:14px;border-right:none;border-bottom:none;border-radius:10px 0 0 0;}
+.corner.tr{top:14px;right:14px;border-left:none;border-bottom:none;border-radius:0 10px 0 0;}
+.corner.bl{bottom:14px;left:14px;border-right:none;border-top:none;border-radius:0 0 0 10px;}
+.corner.br{bottom:14px;right:14px;border-left:none;border-top:none;border-radius:0 0 10px 0;}
+.camera-no{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:var(--text3);font-size:.85rem;text-align:center;gap:8px;
+  background:var(--bg);
+}
+.camera-no .ic{font-size:2rem;}
+
+.shutter-row{
+  display:flex;justify-content:center;align-items:center;
+  padding-bottom:12px;gap:16px;
+}
+#shutter-btn{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--card);border:3px solid var(--text);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:var(--sh-m);
+  transition:transform .1s;
+}
+#shutter-btn:active{transform:scale(.92);}
+#shutter-btn .inner{width:44px;height:44px;border-radius:50%;background:var(--text);}
+#gallery-btn{
+  width:42px;height:42px;border-radius:var(--r-s);
+  background:var(--hover);border:none;
+  font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+#gallery-input{display:none;}
+
+/* Canvas for capture */
+#capture-canvas{display:none;}
+
+/* ====== 2. MATCH RESULT ====== */
+#screen-match{align-items:center;justify-content:center;text-align:center;padding-top:24px;}
+.match-verdict{font-family:'Jua',sans-serif;font-size:1.3rem;line-height:1.35;margin-bottom:8px;}
+.match-verdict .hl{background:var(--butter);padding:1px 6px;border-radius:8px;}
+.match-stage{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:14px;}
+.match-cover{
+  width:70px;height:100px;border-radius:8px;
+  overflow:hidden;box-shadow:var(--sh-s);
+}
+.match-cover img{width:100%;height:100%;object-fit:cover;}
+.match-cover .placeholder{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-family:'Jua',sans-serif;font-size:.7rem;text-align:center;padding:6px;
+}
+.match-bar-wrap{
+  width:100%;background:var(--bg);border-radius:var(--r-m);
+  padding:10px 14px;margin-bottom:10px;
+}
+.match-bar-head{display:flex;justify-content:space-between;align-items:center;font-size:.72rem;color:var(--text2);}
+.match-bar-head .score{font-family:'Jua',sans-serif;font-size:1.2rem;color:var(--text);}
+.match-bar{margin-top:5px;height:8px;border-radius:var(--r-pill);background:var(--border);overflow:hidden;}
+.match-bar .fill{height:100%;border-radius:var(--r-pill);background:var(--sage);transition:width .6s ease;}
+.match-reasons{display:flex;flex-direction:column;gap:5px;width:100%;margin-bottom:10px;text-align:left;}
+.match-reason{
+  background:var(--bg);border-radius:var(--r-m);
+  padding:7px 12px;font-size:.72rem;
+  display:flex;align-items:center;gap:8px;
+}
+.match-reason .chip{
+  flex:0 0 auto;border-radius:var(--r-pill);
+  padding:2px 9px;font-family:'Jua',sans-serif;font-size:.72rem;
+}
+.match-actions{display:flex;gap:8px;width:100%;}
+.match-actions .btn{
+  flex:1;font-family:'Jua',sans-serif;font-size:.88rem;
+  padding:10px 4px;border:none;border-radius:var(--r-pill);
+  background:var(--text);color:var(--white);cursor:pointer;
+  box-shadow:var(--sh-s);
+}
+.match-actions .btn.ghost{background:var(--bg);color:var(--text);box-shadow:none;}
+
+/* ====== 3. BOOKSHELF ====== */
+#screen-shelf{padding-bottom:16px;}
+.shelf-row{
+  display:flex;align-items:flex-end;justify-content:flex-start;
+  gap:8px;min-height:90px;padding:0 4px;flex-wrap:wrap;
+}
+.shelf-plank{height:3px;background:var(--border);border-radius:var(--r-pill);margin:0 0 14px;}
+.shelf-book{
+  width:32px;border-radius:4px 4px 2px 2px;
+  box-shadow:var(--sh-s);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;transition:transform .2s;
+  position:relative;
+}
+.shelf-book:active{transform:translateY(-4px) rotate(-2deg);}
+.shelf-book .spine{
+  writing-mode:vertical-rl;
+  font-family:'Jua',sans-serif;font-size:.5rem;
+  color:var(--text);text-align:center;line-height:1.1;
+  padding:4px 1px;max-height:80px;overflow:hidden;
+}
+.shelf-empty{
+  text-align:center;padding:60px 20px;
+  color:var(--text3);font-size:.88rem;line-height:1.6;
+}
+.shelf-empty .big{font-size:2rem;margin-bottom:8px;}
+
+/* ====== 4. CHARACTER ====== */
+#screen-character{align-items:center;padding-top:8px;}
+.char-profile{
+  width:100%;background:var(--bg);border-radius:var(--r-l);
+  padding:18px 16px 14px;text-align:center;margin-bottom:14px;
+}
+.char-profile .name{font-family:'Jua',sans-serif;font-size:1.35rem;margin-top:4px;}
+.char-profile .epithet{font-size:.82rem;margin-top:2px;}
+.char-profile .basis{font-size:.7rem;color:var(--text3);margin-top:6px;}
+.char-bars{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.char-bar{display:flex;align-items:center;gap:6px;}
+.char-bar .label{width:68px;font-size:.72rem;color:var(--text2);}
+.char-bar .track{flex:1;height:8px;border-radius:var(--r-pill);background:var(--bg);overflow:hidden;}
+.char-bar .fill{height:100%;border-radius:var(--r-pill);}
+.char-bar .pct{width:28px;text-align:right;font-size:.65rem;color:var(--text3);}
+.char-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;}
+.char-tags .tag{
+  font-size:.7rem;padding:2px 10px;
+  background:var(--bg);border-radius:var(--r-pill);color:var(--text2);
+}
+.char-empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:.88rem;line-height:1.6;}
+.char-empty .big{font-size:2rem;margin-bottom:8px;}
+
+/* ====== 5. RECOMMENDATIONS ====== */
+#screen-reco{padding-bottom:16px;}
+.reco-card{
+  background:var(--card);border-radius:var(--r-m);
+  padding:10px;margin-bottom:8px;display:flex;gap:10px;
+  box-shadow:var(--sh-s);
+}
+.reco-cover{
+  flex:0 0 52px;height:76px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:4px;
+  font-family:'Jua',sans-serif;font-size:.62rem;line-height:1.2;
+}
+.reco-body h4{font-family:'Jua',sans-serif;font-size:.95rem;font-weight:400;margin:0 0 1px;}
+.reco-body .au{font-size:.65rem;color:var(--text3);margin:0 0 2px;}
+.reco-body .why{font-size:.65rem;color:var(--text2);line-height:1.4;}
+.reco-empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:.88rem;line-height:1.6;}
+.reco-empty .big{font-size:2rem;margin-bottom:8px;}
+
+/* ====== POPUP (book detail) ====== */
+.popup-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(55,53,47,.3);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+.popup-overlay.open{opacity:1;pointer-events:auto;}
+.popup-card{
+  background:var(--card);border-radius:var(--r-l);
+  box-shadow:var(--sh-l);width:100%;max-width:320px;
+  padding:22px 20px 18px;
+  transform:scale(.92) translateY(12px);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  text-align:center;position:relative;
+  max-height:80vh;overflow-y:auto;
+}
+.popup-overlay.open .popup-card{transform:scale(1) translateY(0);}
+.popup-close{
+  position:absolute;top:12px;right:14px;
+  width:28px;height:28px;border-radius:50%;
+  background:var(--hover);border:none;
+  font-size:.85rem;color:var(--text2);cursor:pointer;
+}
+.popup-cover-img{
+  width:90px;height:130px;border-radius:8px;
+  margin:0 auto 10px;overflow:hidden;
+  box-shadow:var(--sh-s);
+}
+.popup-cover-img img{width:100%;height:100%;object-fit:cover;}
+.popup-cover-color{
+  width:90px;height:130px;border-radius:8px;
+  margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Jua',sans-serif;font-size:.85rem;
+  text-align:center;padding:8px;line-height:1.2;
+}
+.popup-title{font-family:'Jua',sans-serif;font-size:1.15rem;margin:0 0 2px;}
+.popup-author{font-size:.75rem;color:var(--text2);margin:0 0 8px;}
+.popup-stars{font-size:1rem;color:#E8A93A;letter-spacing:2px;margin-bottom:8px;}
+.popup-tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:10px;}
+.popup-tags .tag{font-size:.65rem;padding:2px 8px;background:var(--bg);border-radius:var(--r-pill);color:var(--text2);}
+.popup-memo{
+  background:var(--bg);border-radius:var(--r-m);
+  padding:8px 10px;font-size:.75rem;line-height:1.5;text-align:left;
+}
+.popup-memo .memo-label{font-family:'Jua',sans-serif;font-size:.78rem;display:block;margin-bottom:3px;color:var(--text2);}
+.popup-date{font-size:.65rem;color:var(--text3);margin-top:8px;}
+.popup-delete{
+  margin-top:10px;background:none;border:none;
+  font-size:.72rem;color:var(--coral);cursor:pointer;
+  padding:4px 12px;border-radius:var(--r-pill);
+}
+
+/* ====== LOADING OVERLAY ====== */
+.loading-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:var(--card);
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:16px;text-align:center;
+}
+.loading-overlay.show{display:flex;}
+.loading-text{font-family:'Jua',sans-serif;font-size:1.1rem;}
+.loading-sub{font-size:.78rem;color:var(--text2);}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.loading-anim{animation:bounce 1s ease infinite;}
+</style>
+</head>
+<body>
+
+<!-- ====== SVG CHARACTERS ====== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <symbol id="char-happy" viewBox="0 0 140 160">
+    <ellipse cx="42" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="98" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="42" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
+    <ellipse cx="98" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
+    <ellipse cx="70" cy="86" rx="52" ry="54" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <path d="M28 100 q42 24 84 0 l-4 14 q-38 18 -76 0z" fill="var(--pink)" stroke="#37352F" stroke-width="1.5"/>
+    <path d="M48 76 q8-8 16 0" stroke="#37352F" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M76 76 q8-8 16 0" stroke="#37352F" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="48" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
+    <ellipse cx="92" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
+    <path d="M62 94 q8 6 16 0" stroke="#37352F" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <rect x="42" y="120" width="56" height="30" rx="6" fill="var(--mint)" stroke="#37352F" stroke-width="2"/>
+    <line x1="70" y1="120" x2="70" y2="150" stroke="#37352F" stroke-width="1.5"/>
+  </symbol>
+  <symbol id="char-think" viewBox="0 0 140 160">
+    <ellipse cx="42" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="98" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="42" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
+    <ellipse cx="98" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
+    <ellipse cx="70" cy="86" rx="52" ry="54" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <path d="M28 100 q42 24 84 0 l-4 14 q-38 18 -76 0z" fill="var(--lavender)" stroke="#37352F" stroke-width="1.5"/>
+    <circle cx="56" cy="78" r="3" fill="#37352F"/>
+    <circle cx="84" cy="78" r="3" fill="#37352F"/>
+    <ellipse cx="70" cy="96" rx="3" ry="2" fill="#37352F"/>
+    <ellipse cx="48" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
+    <ellipse cx="92" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
+    <circle cx="118" cy="38" r="3" fill="var(--white)" stroke="#37352F" stroke-width="1.5"/>
+    <circle cx="126" cy="26" r="5" fill="var(--white)" stroke="#37352F" stroke-width="1.5"/>
+    <text x="124" y="30" font-family="Jua,sans-serif" font-size="8" fill="#37352F" text-anchor="middle">?</text>
+    <rect x="42" y="120" width="56" height="30" rx="6" fill="var(--peach)" stroke="#37352F" stroke-width="2"/>
+    <line x1="70" y1="120" x2="70" y2="150" stroke="#37352F" stroke-width="1.5"/>
+  </symbol>
+  <symbol id="char-excited" viewBox="0 0 140 160">
+    <ellipse cx="42" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="98" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="42" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
+    <ellipse cx="98" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
+    <ellipse cx="70" cy="86" rx="52" ry="54" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
+    <path d="M28 100 q42 24 84 0 l-4 14 q-38 18 -76 0z" fill="var(--butter)" stroke="#37352F" stroke-width="1.5"/>
+    <path d="M56 72 l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1z" fill="#E8A93A" stroke="#37352F" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M84 72 l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1z" fill="#E8A93A" stroke="#37352F" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M58 94 q12 10 24 0 q-12 4-24 0z" fill="var(--coral)" stroke="#37352F" stroke-width="1.5" stroke-linejoin="round"/>
+    <ellipse cx="44" cy="94" rx="6" ry="4" fill="var(--char-blush)"/>
+    <ellipse cx="96" cy="94" rx="6" ry="4" fill="var(--char-blush)"/>
+    <rect x="34" y="110" width="72" height="30" rx="6" fill="var(--sky)" stroke="#37352F" stroke-width="2"/>
+    <line x1="70" y1="110" x2="70" y2="140" stroke="#37352F" stroke-width="1.5"/>
+    <text x="20" y="60" font-size="16" fill="#E8A93A">✦</text>
+    <text x="116" y="76" font-size="12" fill="#E8A93A">✦</text>
+  </symbol>
+</defs>
+</svg>
+
+<div id="app">
+
+  <!-- ====== 1. CAPTURE ====== -->
+  <div class="screen active" id="screen-capture">
+    <div class="capture-header">
+      <h1>이 책, 나랑 맞을까?</h1>
+      <p>책 표지를 비춰주세요</p>
+    </div>
+    <div class="camera-wrap" id="camera-wrap">
+      <video id="camera-feed" autoplay playsinline muted></video>
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <div class="camera-no" id="camera-no" style="display:none">
+        <span class="ic">📷</span>
+        <span>카메라를 사용할 수 없어요</span>
+        <span style="font-size:.72rem">아래 갤러리 버튼으로 사진을 선택해주세요</span>
+      </div>
+    </div>
+    <div class="shutter-row">
+      <button id="gallery-btn" title="갤러리에서 선택">🖼️</button>
+      <button id="shutter-btn"><span class="inner"></span></button>
+      <div style="width:42px"></div>
+    </div>
+    <input type="file" id="gallery-input" accept="image/*">
+    <canvas id="capture-canvas"></canvas>
+  </div>
+
+  <!-- ====== 2. MATCH RESULT ====== -->
+  <div class="screen" id="screen-match">
+    <div id="match-content"></div>
+  </div>
+
+  <!-- ====== 3. BOOKSHELF ====== -->
+  <div class="screen" id="screen-shelf">
+    <h2 class="screen-title">내 책장</h2>
+    <p class="screen-sub" id="shelf-count"></p>
+    <div id="shelf-body"></div>
+  </div>
+
+  <!-- ====== 4. CHARACTER ====== -->
+  <div class="screen" id="screen-character">
+    <h2 class="screen-title" style="text-align:center;width:100%">내 책 친구</h2>
+    <div id="char-body"></div>
+  </div>
+
+  <!-- ====== 5. RECOMMENDATIONS ====== -->
+  <div class="screen" id="screen-reco">
+    <h2 class="screen-title">다음에 읽을 책</h2>
+    <p class="screen-sub">포근이가 골랐어요</p>
+    <div id="reco-body"></div>
+  </div>
+
+  <!-- ====== BOTTOM NAV ====== -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-screen="capture"><span class="ic">📷</span>찍기</button>
+    <button class="nav-btn" data-screen="shelf"><span class="ic">📚</span>책장</button>
+    <button class="nav-btn" data-screen="character"><span class="ic">♡</span>캐릭터</button>
+    <button class="nav-btn" data-screen="reco"><span class="ic">☆</span>추천</button>
+  </nav>
+</div>
+
+<!-- ====== POPUP ====== -->
+<div class="popup-overlay" id="popup-overlay">
+  <div class="popup-card" id="popup-card"></div>
+</div>
+
+<!-- ====== LOADING ====== -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-anim">
+    <svg width="110" height="126"><use href="#char-think"/></svg>
+  </div>
+  <div class="loading-text">포근이가 읽어보는 중…</div>
+  <div class="loading-sub">표지를 분석하고 있어요</div>
+</div>
+
+<script>
+/* =============================================
+   DATABASE (IndexedDB)
+============================================= */
+const DB = {
+  db: null,
+  async open() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('BookTasteDB', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('books')) {
+          const store = db.createObjectStore('books', { keyPath: 'id', autoIncrement: true });
+          store.createIndex('createdAt', 'createdAt');
+        }
+        if (!db.objectStoreNames.contains('character')) {
+          db.createObjectStore('character', { keyPath: 'key' });
+        }
+      };
+      req.onsuccess = e => { DB.db = e.target.result; resolve(); };
+      req.onerror = e => reject(e.target.error);
+    });
+  },
+  async saveBook(book) {
+    return new Promise((resolve, reject) => {
+      const tx = DB.db.transaction('books', 'readwrite');
+      const req = tx.objectStore('books').add(book);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = e => reject(e.target.error);
+    });
+  },
+  async getBooks() {
+    return new Promise((resolve, reject) => {
+      const tx = DB.db.transaction('books', 'readonly');
+      const req = tx.objectStore('books').index('createdAt').openCursor(null, 'prev');
+      const results = [];
+      req.onsuccess = e => {
+        const cursor = e.target.result;
+        if (cursor) { results.push(cursor.value); cursor.continue(); }
+        else resolve(results);
+      };
+      req.onerror = e => reject(e.target.error);
+    });
+  },
+  async deleteBook(id) {
+    return new Promise((resolve, reject) => {
+      const tx = DB.db.transaction('books', 'readwrite');
+      const req = tx.objectStore('books').delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = e => reject(e.target.error);
+    });
+  },
+  async saveCharacter(data) {
+    return new Promise((resolve, reject) => {
+      const tx = DB.db.transaction('character', 'readwrite');
+      const req = tx.objectStore('character').put({ key: 'main', ...data });
+      req.onsuccess = () => resolve();
+      req.onerror = e => reject(e.target.error);
+    });
+  },
+  async getCharacter() {
+    return new Promise((resolve, reject) => {
+      const tx = DB.db.transaction('character', 'readonly');
+      const req = tx.objectStore('character').get('main');
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = e => reject(e.target.error);
+    });
+  }
+};
+
+/* =============================================
+   CAMERA
+============================================= */
+const Camera = {
+  stream: null,
+  async start() {
+    const video = document.getElementById('camera-feed');
+    const noEl = document.getElementById('camera-no');
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 1920 } }
+      });
+      video.srcObject = this.stream;
+      noEl.style.display = 'none';
+    } catch (e) {
+      console.warn('Camera unavailable:', e);
+      noEl.style.display = 'flex';
+    }
+  },
+  stop() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null;
+    }
+  },
+  capture() {
+    const video = document.getElementById('camera-feed');
+    if (!video.srcObject) return null;
+    const canvas = document.getElementById('capture-canvas');
+    const maxW = 800;
+    let w = video.videoWidth, h = video.videoHeight;
+    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', 0.82);
+  }
+};
+
+/* =============================================
+   AI (Mock → swap to real API later)
+============================================= */
+const PASTELS = ['var(--pink)','var(--mint)','var(--peach)','var(--lavender)','var(--sky)','var(--butter)','var(--coral)','var(--sage)'];
+function randomPastel() { return PASTELS[Math.floor(Math.random() * PASTELS.length)]; }
+
+const AI = {
+  async analyzeCover(imageBase64) {
+    // Vercel 배포 환경이면 실제 API, 아니면 Mock
+    const isDeployed = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
+    if (isDeployed) {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageBase64 })
+      });
+      if (!res.ok) throw new Error('API error ' + res.status);
+      return res.json();
+    }
+    // Mock (로컬 테스트용)
+    await new Promise(r => setTimeout(r, 1500));
+    const mockBooks = [
+      { title:'아몬드', author:'손원평', year:'2017', tags:['감정','성장','한국문학'], matchScore:87, matchReasons:['잔잔한 산문, 평소 좋아하는 결','감정에 집중하는 성장 이야기','한국 문학 결을 자주 읽으셨어요'], verdict:'너랑 잘 맞을 것 같아!' },
+      { title:'코스모스', author:'칼 세이건', year:'1980', tags:['과학','우주','경이'], matchScore:62, matchReasons:['평소와는 다른 결이에요','새로운 시야를 열어줄 수 있어요','잔잔하게 읽히는 과학 교양서'], verdict:'새로운 시도가 될 수도!' },
+      { title:'파친코', author:'이민진', year:'2017', tags:['역사','가족','서사'], matchScore:91, matchReasons:['가족 서사를 좋아하는 결과 맞아요','몰입감 있는 긴 호흡의 이야기','한국 역사 배경이 공감을 줄 거예요'], verdict:'이 책, 꼭 읽어봐!' },
+      { title:'미드나잇 라이브러리', author:'매트 헤이그', year:'2020', tags:['판타지','위로','선택'], matchScore:79, matchReasons:['위로를 주는 이야기를 좋아하시잖아요','가볍게 읽히는 판타지','삶의 선택에 대한 따뜻한 시선'], verdict:'너랑 잘 맞을 것 같아!' },
+      { title:'데미안', author:'헤르만 헤세', year:'1919', tags:['성장','자아','고전'], matchScore:84, matchReasons:['자기 내면을 들여다보는 이야기','잔잔하지만 깊은 울림','성장 서사를 좋아하는 결과 맞아요'], verdict:'너랑 잘 맞을 것 같아!' },
+    ];
+    return mockBooks[Math.floor(Math.random() * mockBooks.length)];
+  },
+
+  async generateCharacter(books) {
+    if (books.length === 0) return null;
+    const tagCounts = {};
+    books.forEach(b => (b.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
+    const sorted = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+    const topTags = sorted.slice(0, 5).map(e => e[0]);
+    const traits = sorted.slice(0, 4).map(e => ({
+      name: e[0],
+      pct: Math.min(95, Math.round(e[1] / books.length * 100 + 20)),
+      color: randomPastel()
+    }));
+    const epithets = [
+      '잔잔한 위로를 좋아하는 사색가',
+      '이야기 속에 빠져드는 몽상가',
+      '깊은 감정을 찾아다니는 탐험가',
+      '조용한 페이지 위의 여행자'
+    ];
+    return {
+      name: '포근이',
+      epithet: epithets[Math.floor(Math.random() * epithets.length)],
+      traits,
+      topTags,
+      bookCount: books.length
+    };
+  }
+};
+
+/* =============================================
+   UI
+============================================= */
+const UI = {
+  currentScreen: 'capture',
+
+  navigate(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screenId).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.screen === screenId);
+    });
+    this.currentScreen = screenId;
+    if (screenId === 'capture') Camera.start();
+    else Camera.stop();
+    if (screenId === 'shelf') this.renderShelf();
+    if (screenId === 'character') this.renderCharacter();
+    if (screenId === 'reco') this.renderReco();
+  },
+
+  showLoading(show) {
+    document.getElementById('loading').classList.toggle('show', show);
+  },
+
+  /* --- Match Result --- */
+  showMatch(result, imageData) {
+    const chipColors = ['var(--mint)','var(--lavender)','var(--peach)'];
+    const el = document.getElementById('match-content');
+    el.innerHTML = `
+      <p class="match-verdict">"이 책, <span class="hl">${result.verdict}</span>"</p>
+      <div class="match-stage">
+        <div class="match-cover">
+          ${imageData ? `<img src="${imageData}" alt="표지">` : `<div class="placeholder" style="background:${randomPastel()}">${result.title}</div>`}
+        </div>
+        <svg width="110" height="126"><use href="#char-happy"/></svg>
+      </div>
+      <div class="match-bar-wrap">
+        <div class="match-bar-head"><span>포근이의 취향 일치도</span><span class="score">${result.matchScore}%</span></div>
+        <div class="match-bar"><div class="fill" style="width:0%"></div></div>
+      </div>
+      <div class="match-reasons">
+        ${result.matchReasons.map((r, i) => `<div class="match-reason"><span class="chip" style="background:${chipColors[i % 3]}">${['결','작가','감정'][i % 3]}</span>${r}</div>`).join('')}
+      </div>
+      <div class="match-actions">
+        <button class="btn" id="btn-save">읽기 시작</button>
+        <button class="btn ghost" id="btn-pass">그래도 패스</button>
+      </div>
+    `;
+    // animate bar
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.querySelector('.match-bar .fill').style.width = result.matchScore + '%';
+      });
+    });
+    // store result temporarily
+    this._pendingBook = { ...result, coverImage: imageData, color: randomPastel(), createdAt: Date.now() };
+    document.getElementById('btn-save').onclick = () => this.saveAndGo();
+    document.getElementById('btn-pass').onclick = () => this.navigate('capture');
+    this.navigate('match');
+  },
+
+  async saveAndGo() {
+    if (!this._pendingBook) return;
+    const book = { ...this._pendingBook, stars: Math.min(5, Math.max(3, Math.round(this._pendingBook.matchScore / 20))), memo: '' };
+    delete book.matchReasons; delete book.verdict; delete book.matchScore;
+    await DB.saveBook(book);
+    this._pendingBook = null;
+    // regenerate character
+    const books = await DB.getBooks();
+    const charData = await AI.generateCharacter(books);
+    if (charData) await DB.saveCharacter(charData);
+    this.navigate('shelf');
+  },
+
+  /* --- Bookshelf --- */
+  async renderShelf() {
+    const books = await DB.getBooks();
+    const countEl = document.getElementById('shelf-count');
+    const body = document.getElementById('shelf-body');
+    countEl.textContent = books.length > 0 ? `총 ${books.length}권` : '';
+    if (books.length === 0) {
+      body.innerHTML = '<div class="shelf-empty"><div class="big">📚</div>아직 책이 없어요<br>표지를 찍어서 첫 번째 책을 기록해보세요</div>';
+      return;
+    }
+    const perRow = 7;
+    let html = '';
+    for (let i = 0; i < books.length; i++) {
+      if (i % perRow === 0) html += '<div class="shelf-row">';
+      const b = books[i];
+      const heights = [82, 88, 94, 100];
+      const h = heights[Math.floor(Math.random() * heights.length)];
+      html += `<div class="shelf-book" style="background:${b.color || randomPastel()};height:${h}px" data-id="${b.id}"><span class="spine">${b.title}</span></div>`;
+      if ((i + 1) % perRow === 0 || i === books.length - 1) html += '</div><div class="shelf-plank"></div>';
+    }
+    body.innerHTML = html;
+    body.querySelectorAll('.shelf-book').forEach(el => {
+      el.addEventListener('click', () => this.showBookPopup(+el.dataset.id));
+    });
+  },
+
+  async showBookPopup(id) {
+    const books = await DB.getBooks();
+    const book = books.find(b => b.id === id);
+    if (!book) return;
+    const card = document.getElementById('popup-card');
+    card.innerHTML = `
+      <button class="popup-close" id="popup-close-btn">✕</button>
+      ${book.coverImage
+        ? `<div class="popup-cover-img"><img src="${book.coverImage}" alt="${book.title}"></div>`
+        : `<div class="popup-cover-color" style="background:${book.color || 'var(--mint)'}">${book.title}</div>`
+      }
+      <h3 class="popup-title">${book.title}</h3>
+      <p class="popup-author">${book.author} · ${book.year}</p>
+      <div class="popup-stars">${'★'.repeat(book.stars || 0)}${'☆'.repeat(5 - (book.stars || 0))}</div>
+      <div class="popup-tags">${(book.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+      ${book.memo ? `<div class="popup-memo"><span class="memo-label">나의 한 줄</span>${book.memo}</div>` : ''}
+      <p class="popup-date">${book.createdAt ? new Date(book.createdAt).toLocaleDateString('ko-KR') + ' 기록' : ''}</p>
+      <button class="popup-delete" data-id="${book.id}">이 책 삭제</button>
+    `;
+    document.getElementById('popup-overlay').classList.add('open');
+    card.querySelector('#popup-close-btn').onclick = () => this.closePopup();
+    card.querySelector('.popup-delete').onclick = async () => {
+      await DB.deleteBook(book.id);
+      this.closePopup();
+      this.renderShelf();
+      // regenerate character
+      const remaining = await DB.getBooks();
+      const charData = await AI.generateCharacter(remaining);
+      if (charData) await DB.saveCharacter(charData);
+    };
+  },
+
+  closePopup() {
+    document.getElementById('popup-overlay').classList.remove('open');
+  },
+
+  /* --- Character --- */
+  async renderCharacter() {
+    const body = document.getElementById('char-body');
+    const char = await DB.getCharacter();
+    if (!char) {
+      body.innerHTML = '<div class="char-empty"><div class="big">♡</div>아직 캐릭터가 없어요<br>책을 3권 이상 기록하면<br>나만의 책 친구가 태어나요</div>';
+      return;
+    }
+    body.innerHTML = `
+      <div class="char-profile">
+        <svg width="130" height="148"><use href="#char-happy"/></svg>
+        <div class="name">${char.name}</div>
+        <div class="epithet">"${char.epithet}"</div>
+        <p class="basis">${char.bookCount}권의 책 기록으로 자라났어요</p>
+      </div>
+      <div class="char-bars">
+        ${(char.traits || []).map(t => `
+          <div class="char-bar">
+            <span class="label">${t.name}</span>
+            <div class="track"><div class="fill" style="width:${t.pct}%;background:${t.color}"></div></div>
+            <span class="pct">${t.pct}%</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="char-tags">${(char.topTags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+    `;
+  },
+
+  /* --- Recommendations --- */
+  async renderReco() {
+    const body = document.getElementById('reco-body');
+    const books = await DB.getBooks();
+    if (books.length < 2) {
+      body.innerHTML = '<div class="reco-empty"><div class="big">☆</div>책을 조금 더 기록하면<br>취향에 맞는 추천을 해드릴게요</div>';
+      return;
+    }
+    const recos = [
+      { title:'서랍에 저녁을 넣어 두었다', author:'한강', color:'var(--mint)', why:'잔잔한 결이 비슷, 천천히 머무르는 문장' },
+      { title:'시선으로부터,', author:'정세랑', color:'var(--lavender)', why:'따뜻한 가족 이야기를 좋아하는 분이라면' },
+      { title:'친애하고, 친애하는', author:'백수린', color:'var(--peach)', why:'세 모녀의 일상, 인물에 머무르는 결' },
+      { title:'방금 떠나온 세계', author:'김초엽', color:'var(--sky)', why:'잔잔하지만 한 발 새로운 결, SF 입문' },
+    ];
+    body.innerHTML = recos.map(r => `
+      <div class="reco-card">
+        <div class="reco-cover" style="background:${r.color}">${r.title}</div>
+        <div class="reco-body">
+          <h4>${r.title}</h4>
+          <p class="au">${r.author}</p>
+          <p class="why">${r.why}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+};
+
+/* =============================================
+   INIT
+============================================= */
+(async function init() {
+  await DB.open();
+
+  // Navigation
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => UI.navigate(btn.dataset.screen));
+  });
+
+  // Camera start
+  Camera.start();
+
+  // Shutter
+  document.getElementById('shutter-btn').addEventListener('click', async () => {
+    const imageData = Camera.capture();
+    if (!imageData) return;
+    UI.showLoading(true);
+    try {
+      const result = await AI.analyzeCover(imageData);
+      UI.showLoading(false);
+      UI.showMatch(result, imageData);
+    } catch (e) {
+      UI.showLoading(false);
+      alert('분석 중 오류가 발생했어요. 다시 시도해주세요.');
+    }
+  });
+
+  // Gallery
+  document.getElementById('gallery-btn').addEventListener('click', () => {
+    document.getElementById('gallery-input').click();
+  });
+  document.getElementById('gallery-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      // Resize
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.getElementById('capture-canvas');
+        const maxW = 800;
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const imageData = canvas.toDataURL('image/jpeg', 0.82);
+        UI.showLoading(true);
+        try {
+          const result = await AI.analyzeCover(imageData);
+          UI.showLoading(false);
+          UI.showMatch(result, imageData);
+        } catch (err) {
+          UI.showLoading(false);
+          alert('분석 중 오류가 발생했어요.');
+        }
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  // Popup close
+  document.getElementById('popup-overlay').addEventListener('click', e => {
+    if (e.target.id === 'popup-overlay') UI.closePopup();
+  });
+})();
+</script>
+</body>
+</html>
