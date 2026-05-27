@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
 
     const base64Data = body.image.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
 
-    const prompt = `이 책 표지 이미지를 분석하세요. title은 책 제목, author는 저자, year는 출판연도(모르면 빈 문자열), tags는 한국어 장르 태그 2~4개, matchScore는 60~95 사이 정수, matchReasons는 이 책의 특징을 설명하는 한국어 문장 3개, verdict는 친근한 반말 한 줄 평가.`;
+    const prompt = `이 책 표지를 보고 JSON으로 답해. matchReasons는 10자 이내 짧은 문장 3개. verdict는 10자 이내.`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
     const reqBody = JSON.stringify({
@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
       }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'object',
