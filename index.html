@@ -568,8 +568,13 @@ const AI = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imageBase64 })
       });
-      if (!res.ok) throw new Error('API error ' + res.status);
-      return res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const errMsg = data?.error || ('HTTP ' + res.status);
+        throw new Error(errMsg);
+      }
+      if (!data || !data.title) throw new Error('응답에 책 정보가 없어요: ' + JSON.stringify(data).slice(0,100));
+      return data;
     }
     // Mock (로컬 테스트용)
     await new Promise(r => setTimeout(r, 1500));
@@ -826,7 +831,8 @@ const UI = {
       UI.showMatch(result, imageData);
     } catch (e) {
       UI.showLoading(false);
-      alert('분석 중 오류가 발생했어요. 다시 시도해주세요.');
+      alert('오류: ' + e.message);
+      console.error('Analyze error:', e);
     }
   });
 
@@ -856,7 +862,8 @@ const UI = {
           UI.showMatch(result, imageData);
         } catch (err) {
           UI.showLoading(false);
-          alert('분석 중 오류가 발생했어요.');
+          alert('오류: ' + err.message);
+          console.error('Gallery analyze error:', err);
         }
       };
       img.src = ev.target.result;
