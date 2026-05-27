@@ -50,7 +50,7 @@ html,body{
   -webkit-overflow-scrolling:touch;
 }
 .screen.active{display:flex;}
-.screen-title{font-family:'Jua',sans-serif;font-size:1.4rem;font-weight:400;margin-bottom:2px;}
+.screen-title{font-family:'Jua',sans-serif;font-size:1.4rem;font-weight:400;margin-bottom:2px;padding-top:10px;}
 .screen-sub{font-size:.78rem;color:var(--text2);margin-bottom:12px;}
 
 /* ====== BOTTOM NAV ====== */
@@ -76,6 +76,10 @@ html,body{
   font-size:.9rem;transition:background .15s;
 }
 .nav-btn.active .ic{background:var(--hover);}
+.nav-btn .ico-gray{display:inline;filter:grayscale(1) opacity(.5);}
+.nav-btn .ico-color{display:none;}
+.nav-btn.active .ico-gray{display:none;}
+.nav-btn.active .ico-color{display:inline;filter:none;}
 
 /* ====== 1. CAPTURE SCREEN ====== */
 #screen-capture{padding:10px 16px 0;justify-content:flex-start;}
@@ -107,7 +111,7 @@ html,body{
 
 .shutter-row{
   display:flex;justify-content:center;align-items:center;
-  padding-bottom:4px;gap:14px;
+  padding-bottom:4px;position:relative;
 }
 #shutter-btn{
   width:64px;height:64px;border-radius:50%;
@@ -119,6 +123,7 @@ html,body{
 #shutter-btn:active{transform:scale(.92);}
 #shutter-btn .inner{width:44px;height:44px;border-radius:50%;background:var(--text);}
 #gallery-btn{
+  position:absolute;left:calc(50% - 90px);
   width:42px;height:42px;border-radius:var(--r-s);
   background:var(--hover);border:none;
   font-size:1.1rem;cursor:pointer;
@@ -126,25 +131,22 @@ html,body{
 }
 #gallery-input{display:none;}
 .quokka-ask{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  margin-top:-4px;
+  position:absolute;right:calc(50% - 108px);top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;gap:4px;
 }
 .quokka-bubble{
-  background:var(--card);box-shadow:var(--sh-s);
-  border-radius:var(--r-m);padding:3px 10px;
-  font-family:'Jua',sans-serif;font-size:.68rem;color:var(--text2);
-  white-space:nowrap;position:relative;
+  background:none;
+  border-radius:var(--r-m);padding:0;
+  font-family:'Jua',sans-serif;font-size:.7rem;color:var(--text2);
+  white-space:nowrap;
 }
-.quokka-bubble::after{
-  content:"";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%) rotate(45deg);
-  width:6px;height:6px;background:var(--card);box-shadow:1px 1px 1px rgba(0,0,0,.04);
-}
+.quokka-ask svg{flex-shrink:0;}
 
 /* Canvas for capture */
 #capture-canvas{display:none;}
 
 /* ====== 2. MATCH RESULT ====== */
-#screen-match{align-items:center;justify-content:flex-start;text-align:center;padding-top:30px;}
+#screen-match{align-items:center;justify-content:flex-start;text-align:center;padding-top:40px;}
 .match-verdict{font-family:'Jua',sans-serif;font-size:1.3rem;line-height:1.35;margin-bottom:8px;}
 .match-verdict .hl{background:var(--butter);padding:1px 6px;border-radius:8px;}
 .match-stage{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:14px;}
@@ -212,7 +214,7 @@ html,body{
 .shelf-empty .big{font-size:2rem;margin-bottom:8px;}
 
 /* ====== 4. CHARACTER ====== */
-#screen-character{align-items:center;padding-top:10px;}
+#screen-character{align-items:center;padding-top:20px;}
 .char-profile{
   width:100%;background:var(--bg);border-radius:var(--r-l);
   padding:18px 16px 14px;text-align:center;margin-bottom:14px;
@@ -220,12 +222,14 @@ html,body{
 .char-profile .name{font-family:'Jua',sans-serif;font-size:1.35rem;margin-top:4px;}
 .char-profile .epithet{font-size:.82rem;margin-top:2px;}
 .char-profile .basis{font-size:.7rem;color:var(--text3);margin-top:6px;}
-.char-bars{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
-.char-bar{display:flex;align-items:center;gap:6px;}
-.char-bar .label{width:68px;font-size:.72rem;color:var(--text2);}
+.char-bars{width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+.char-bar{display:flex;flex-direction:column;gap:2px;}
+.char-bar .label{font-family:'Jua',sans-serif;font-size:.75rem;color:var(--text);}
+.char-bar .bar-body{display:flex;align-items:center;gap:4px;}
+.char-bar .bar-side{font-size:.6rem;color:var(--text3);width:36px;flex-shrink:0;}
+.char-bar .bar-side:last-child{text-align:right;}
 .char-bar .track{flex:1;height:8px;border-radius:var(--r-pill);background:var(--bg);overflow:hidden;}
 .char-bar .fill{height:100%;border-radius:var(--r-pill);}
-.char-bar .pct{width:28px;text-align:right;font-size:.65rem;color:var(--text3);}
 .char-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;}
 .char-tags .tag{
   font-size:.7rem;padding:2px 10px;
@@ -473,8 +477,8 @@ html,body{
       <button id="gallery-btn" title="갤러리에서 선택">🖼️</button>
       <button id="shutter-btn"><span class="inner"></span></button>
       <div class="quokka-ask">
+        <svg width="42" height="34"><use href="#char-peek"/></svg>
         <div class="quokka-bubble">어떤 책일까...?</div>
-        <svg width="48" height="40"><use href="#char-peek"/></svg>
       </div>
     </div>
     <input type="file" id="gallery-input" accept="image/*">
@@ -508,10 +512,10 @@ html,body{
 
   <!-- ====== BOTTOM NAV ====== -->
   <nav id="bottom-nav">
-    <button class="nav-btn active" data-screen="capture"><span class="ic">📷</span>찍기</button>
-    <button class="nav-btn" data-screen="shelf"><span class="ic">📚</span>책장</button>
-    <button class="nav-btn" data-screen="character"><span class="ic">♡</span>캐릭터</button>
-    <button class="nav-btn" data-screen="reco"><span class="ic">☆</span>추천</button>
+    <button class="nav-btn active" data-screen="capture"><span class="ic"><span class="ico-gray">📷</span><span class="ico-color">📸</span></span>찍기</button>
+    <button class="nav-btn" data-screen="shelf"><span class="ic"><span class="ico-gray">📖</span><span class="ico-color">📚</span></span>책장</button>
+    <button class="nav-btn" data-screen="character"><span class="ic"><span class="ico-gray">🤍</span><span class="ico-color">🧡</span></span>캐릭터</button>
+    <button class="nav-btn" data-screen="reco"><span class="ic"><span class="ico-gray">✩</span><span class="ico-color">⭐</span></span>추천</button>
   </nav>
 </div>
 
@@ -675,24 +679,63 @@ const AI = {
 
   async generateCharacter(books) {
     if (books.length === 0) return null;
+
+    // 태그 빈도 수집
     const tagCounts = {};
     books.forEach(b => (b.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
     const sorted = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
-    const topTags = sorted.slice(0, 5).map(e => e[0]);
-    const traits = sorted.slice(0, 4).map(e => ({
-      name: e[0],
-      pct: Math.min(95, Math.round(e[1] / books.length * 100 + 20)),
-      color: randomPastel()
-    }));
-    const epithets = [
-      '잔잔한 위로를 좋아하는 사색가',
-      '이야기 속에 빠져드는 몽상가',
-      '깊은 감정을 찾아다니는 탐험가',
-      '조용한 페이지 위의 여행자'
+    const topTags = sorted.slice(0, 6).map(e => e[0]);
+
+    // 5축 성향 분석 (태그 기반 추론)
+    const has = (keywords) => keywords.some(k => topTags.some(t => t.includes(k)));
+    const count = (keywords) => books.reduce((n, b) => n + (b.tags || []).filter(t => keywords.some(k => t.includes(k))).length, 0);
+    const total = Math.max(1, books.length);
+
+    // 난이도: 가벼운(에세이,일상) ↔ 깊은(철학,고전,사회)
+    const light = count(['에세이','일상','가벼','위로','유머']);
+    const deep = count(['철학','고전','사회','역사','과학','경제']);
+    const diffPct = Math.min(95, Math.max(15, Math.round(deep / Math.max(1, light + deep) * 100)));
+
+    // 분위기: 밝은(따뜻,유머,성장) ↔ 어두운(스릴러,아픔,비극)
+    const bright = count(['따뜻','위로','성장','유머','가족','사랑']);
+    const dark = count(['스릴러','아픔','비극','공포','미스터리','범죄']);
+    const moodPct = Math.min(95, Math.max(15, Math.round(bright / Math.max(1, bright + dark) * 100)));
+
+    // 범위: 개인(감정,자아,내면) ↔ 사회(역사,사회,경제)
+    const personal = count(['감정','자아','내면','성장','사랑','일상']);
+    const social = count(['역사','사회','경제','정치','전쟁','문명']);
+    const scopePct = Math.min(95, Math.max(15, Math.round(personal / Math.max(1, personal + social) * 100)));
+
+    // 장르 폭: 상위 2개 장르 집중도
+    const topTwo = sorted.slice(0, 2).reduce((s, e) => s + e[1], 0);
+    const allTags = sorted.reduce((s, e) => s + e[1], 0);
+    const focusPct = Math.min(95, Math.max(15, Math.round(topTwo / Math.max(1, allTags) * 100)));
+
+    // 호흡: 짧은(시,에세이,단편) ↔ 긴(서사,대하,시리즈)
+    const shortForm = count(['시','에세이','단편','짧은']);
+    const longForm = count(['서사','대하','장편','시리즈','역사']);
+    const breathPct = Math.min(95, Math.max(15, Math.round(longForm / Math.max(1, shortForm + longForm) * 100)));
+
+    const traits = [
+      { name: '난이도', leftLabel: '가벼운', rightLabel: '깊은', pct: diffPct, color: 'var(--lavender)' },
+      { name: '분위기', leftLabel: '어두운', rightLabel: '밝은', pct: moodPct, color: 'var(--pink)' },
+      { name: '시선', leftLabel: '사회', rightLabel: '개인', pct: scopePct, color: 'var(--mint)' },
+      { name: '장르 폭', leftLabel: '탐험형', rightLabel: '집중형', pct: focusPct, color: 'var(--peach)' },
+      { name: '호흡', leftLabel: '짧은', rightLabel: '긴', pct: breathPct, color: 'var(--sky)' }
     ];
+
+    // 별명 생성 (성향 기반)
+    let epithet = '';
+    if (moodPct > 60 && scopePct > 60) epithet = '따뜻한 이야기를 좋아하는 사색가';
+    else if (diffPct > 60 && scopePct < 40) epithet = '세상을 깊이 들여다보는 탐구자';
+    else if (moodPct < 40) epithet = '긴장감 있는 이야기를 즐기는 모험가';
+    else if (focusPct < 40) epithet = '장르를 넘나드는 호기심 많은 독서가';
+    else if (breathPct > 60) epithet = '긴 서사에 빠져드는 몰입형 독서가';
+    else epithet = '균형 잡힌 취향의 다정한 독서가';
+
     return {
       name: '쿼카',
-      epithet: epithets[Math.floor(Math.random() * epithets.length)],
+      epithet,
       traits,
       topTags,
       bookCount: books.length
@@ -741,7 +784,11 @@ const UI = {
         <div class="match-bar"><div class="fill" style="width:0%"></div></div>
       </div>
       <div class="match-reasons">
-        ${result.matchReasons.map((r, i) => `<div class="match-reason"><span class="chip" style="background:${chipColors[i % 3]}">${['결','작가','감정'][i % 3]}</span>${r}</div>`).join('')}
+        ${result.matchReasons.map((r, i) => {
+          const labels = ['분위기','난이도','장르'];
+          const colors = ['var(--mint)','var(--lavender)','var(--peach)'];
+          return `<div class="match-reason"><span class="chip" style="background:${colors[i % 3]}">${labels[i % 3]}</span>${r}</div>`;
+        }).join('')}
       </div>
       <div class="match-actions">
         <button class="btn" id="btn-save">읽기 시작</button>
@@ -855,8 +902,11 @@ const UI = {
         ${(char.traits || []).map(t => `
           <div class="char-bar">
             <span class="label">${t.name}</span>
-            <div class="track"><div class="fill" style="width:${t.pct}%;background:${t.color}"></div></div>
-            <span class="pct">${t.pct}%</span>
+            <div class="bar-body">
+              <span class="bar-side">${t.leftLabel || ''}</span>
+              <div class="track"><div class="fill" style="width:${t.pct}%;background:${t.color}"></div></div>
+              <span class="bar-side">${t.rightLabel || ''}</span>
+            </div>
           </div>
         `).join('')}
       </div>
