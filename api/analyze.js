@@ -18,7 +18,19 @@ module.exports = async function handler(req, res) {
 
     const base64Data = body.image.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
 
-    const prompt = `이 책 표지를 보고 JSON으로 답해. matchReasons는 10자 이내 짧은 문장 3개. verdict는 10자 이내.`;
+    const prompt = `이 책 표지를 분석해서 JSON으로 답해줘.
+
+규칙:
+- title: 정확한 책 제목
+- author: 저자 이름
+- year: 출판연도 (모르면 빈 문자열)
+- tags: 이 책을 설명하는 한국어 키워드 2~4개 (예: 성장, 가족, 철학, 에세이, 스릴러 등)
+- matchScore: 이 책의 대중적 평가와 접근성을 고려한 60~95 사이 점수
+- matchReasons: 정확히 3개의 짧은 문장 (각각 15자 이내):
+  첫 번째: 이 책의 분위기를 한 줄로 (예: "잔잔하고 따뜻한 결")
+  두 번째: 이 책의 읽기 난이도 (예: "부담 없이 읽히는 책")
+  세 번째: 이 책의 장르 특성 (예: "한국 현대 소설")
+- verdict: 책을 좋아하는 친구에게 추천하듯 따뜻한 반말 한마디 (예: "마음이 따뜻해지는 책이야", "한번 빠지면 멈출 수 없어", "조용한 밤에 읽기 딱이야")`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
     const reqBody = JSON.stringify({

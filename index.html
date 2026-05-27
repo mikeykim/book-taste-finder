@@ -506,7 +506,7 @@ html,body{
   <!-- ====== 5. RECOMMENDATIONS ====== -->
   <div class="screen" id="screen-reco">
     <h2 class="screen-title">다음에 읽을 책</h2>
-    <p class="screen-sub">쿼카가 골랐어요</p>
+    <p class="screen-sub">내 책장을 바탕으로 쿼카가 골랐어요</p>
     <div id="reco-body"></div>
   </div>
 
@@ -668,11 +668,11 @@ const AI = {
     // Mock (로컬 테스트용)
     await new Promise(r => setTimeout(r, 1500));
     const mockBooks = [
-      { title:'아몬드', author:'손원평', year:'2017', tags:['감정','성장','한국문학'], matchScore:87, matchReasons:['잔잔한 산문, 평소 좋아하는 결','감정에 집중하는 성장 이야기','한국 문학 결을 자주 읽으셨어요'], verdict:'너랑 잘 맞을 것 같아!' },
-      { title:'코스모스', author:'칼 세이건', year:'1980', tags:['과학','우주','경이'], matchScore:62, matchReasons:['평소와는 다른 결이에요','새로운 시야를 열어줄 수 있어요','잔잔하게 읽히는 과학 교양서'], verdict:'새로운 시도가 될 수도!' },
-      { title:'파친코', author:'이민진', year:'2017', tags:['역사','가족','서사'], matchScore:91, matchReasons:['가족 서사를 좋아하는 결과 맞아요','몰입감 있는 긴 호흡의 이야기','한국 역사 배경이 공감을 줄 거예요'], verdict:'이 책, 꼭 읽어봐!' },
-      { title:'미드나잇 라이브러리', author:'매트 헤이그', year:'2020', tags:['판타지','위로','선택'], matchScore:79, matchReasons:['위로를 주는 이야기를 좋아하시잖아요','가볍게 읽히는 판타지','삶의 선택에 대한 따뜻한 시선'], verdict:'너랑 잘 맞을 것 같아!' },
-      { title:'데미안', author:'헤르만 헤세', year:'1919', tags:['성장','자아','고전'], matchScore:84, matchReasons:['자기 내면을 들여다보는 이야기','잔잔하지만 깊은 울림','성장 서사를 좋아하는 결과 맞아요'], verdict:'너랑 잘 맞을 것 같아!' },
+      { title:'아몬드', author:'손원평', year:'2017', tags:['감정','성장','한국문학'], matchScore:87, matchReasons:['잔잔하고 따뜻한 결','편하게 읽히는 소설','한국 현대 성장소설'], verdict:'마음이 따뜻해지는 책이야' },
+      { title:'코스모스', author:'칼 세이건', year:'1980', tags:['과학','우주','경이'], matchScore:62, matchReasons:['경이롭고 웅장한 톤','천천히 곱씹는 깊이','과학 교양 에세이'], verdict:'밤하늘 보며 읽기 딱이야' },
+      { title:'파친코', author:'이민진', year:'2017', tags:['역사','가족','서사'], matchScore:91, matchReasons:['묵직하고 감동적인 결','몰입하면 빠져드는 호흡','역사 가족 대하소설'], verdict:'한번 시작하면 멈출 수 없어' },
+      { title:'미드나잇 라이브러리', author:'매트 헤이그', year:'2020', tags:['판타지','위로','선택'], matchScore:79, matchReasons:['따뜻하고 위로가 되는','가볍게 술술 읽히는 책','판타지 힐링 소설'], verdict:'지친 날에 읽으면 좋은 책이야' },
+      { title:'데미안', author:'헤르만 헤세', year:'1919', tags:['성장','자아','고전'], matchScore:84, matchReasons:['고요하고 깊은 울림','곱씹으며 읽는 깊이','고전 성장 문학'], verdict:'조용한 밤에 읽기 딱이야' },
     ];
     return mockBooks[Math.floor(Math.random() * mockBooks.length)];
   },
@@ -772,7 +772,7 @@ const UI = {
     const chipColors = ['var(--mint)','var(--lavender)','var(--peach)'];
     const el = document.getElementById('match-content');
     el.innerHTML = `
-      <p class="match-verdict">"이 책, <span class="hl">${result.verdict}</span>"</p>
+      <p class="match-verdict">"<span class="hl">${result.verdict}</span>"</p>
       <div class="match-stage">
         <div class="match-cover">
           ${imageData ? `<img src="${imageData}" alt="표지">` : `<div class="placeholder" style="background:${randomPastel()}">${result.title}</div>`}
@@ -785,9 +785,10 @@ const UI = {
       </div>
       <div class="match-reasons">
         ${result.matchReasons.map((r, i) => {
+          const icons = ['🌙','📖','🏷'];
           const labels = ['분위기','난이도','장르'];
           const colors = ['var(--mint)','var(--lavender)','var(--peach)'];
-          return `<div class="match-reason"><span class="chip" style="background:${colors[i % 3]}">${labels[i % 3]}</span>${r}</div>`;
+          return `<div class="match-reason"><span class="chip" style="background:${colors[i]}">${icons[i]} ${labels[i]}</span>${r}</div>`;
         }).join('')}
       </div>
       <div class="match-actions">
@@ -915,6 +916,9 @@ const UI = {
   },
 
   /* --- Recommendations --- */
+  _recoCache: null,
+  _recoBooksCount: 0,
+
   async renderReco() {
     const body = document.getElementById('reco-body');
     const books = await DB.getBooks();
@@ -922,15 +926,54 @@ const UI = {
       body.innerHTML = '<div class="reco-empty"><div class="big">☆</div>책을 조금 더 기록하면<br>취향에 맞는 추천을 해드릴게요</div>';
       return;
     }
-    const recos = [
-      { title:'서랍에 저녁을 넣어 두었다', author:'한강', color:'var(--mint)', why:'잔잔한 결이 비슷, 천천히 머무르는 문장' },
-      { title:'시선으로부터,', author:'정세랑', color:'var(--lavender)', why:'따뜻한 가족 이야기를 좋아하는 분이라면' },
-      { title:'친애하고, 친애하는', author:'백수린', color:'var(--peach)', why:'세 모녀의 일상, 인물에 머무르는 결' },
-      { title:'방금 떠나온 세계', author:'김초엽', color:'var(--sky)', why:'잔잔하지만 한 발 새로운 결, SF 입문' },
-    ];
-    body.innerHTML = recos.map(r => `
+
+    // 책 수가 변하지 않았으면 캐시 사용
+    if (this._recoCache && this._recoBooksCount === books.length) {
+      this._renderRecoCards(body, this._recoCache);
+      return;
+    }
+
+    // 로딩 표시
+    body.innerHTML = '<div class="reco-empty"><svg width="70" height="80" class="loading-anim"><use href="#char-think"/></svg><br><span style="font-size:.82rem;color:var(--text2)">쿼카가 추천 고르는 중...</span></div>';
+
+    const isDeployed = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
+
+    try {
+      let recos;
+      if (isDeployed) {
+        const res = await fetch('/api/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ books: books.map(b => ({ title: b.title, author: b.author, tags: b.tags })) })
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(data?.error || 'HTTP ' + res.status);
+        recos = data;
+      } else {
+        // Mock
+        await new Promise(r => setTimeout(r, 1000));
+        recos = [
+          { title:'서랍에 저녁을 넣어 두었다', author:'한강', why:'잔잔한 결이 비슷해요' },
+          { title:'시선으로부터,', author:'정세랑', why:'따뜻한 가족 이야기' },
+          { title:'친애하고, 친애하는', author:'백수린', why:'일상 속 깊은 감정' },
+          { title:'방금 떠나온 세계', author:'김초엽', why:'새로운 결로의 확장' },
+        ];
+      }
+
+      this._recoCache = recos;
+      this._recoBooksCount = books.length;
+      this._renderRecoCards(body, recos);
+
+    } catch (e) {
+      body.innerHTML = `<div class="reco-empty"><div class="big">☆</div>추천을 불러오지 못했어요<br><span style="font-size:.72rem;color:var(--text3)">${e.message}</span></div>`;
+    }
+  },
+
+  _renderRecoCards(body, recos) {
+    const colors = [PASTELS[1], PASTELS[3], PASTELS[2], PASTELS[4], PASTELS[0], PASTELS[5]];
+    body.innerHTML = recos.map((r, i) => `
       <div class="reco-card">
-        <div class="reco-cover" style="background:${r.color}">${r.title}</div>
+        <div class="reco-cover" style="background:${colors[i % colors.length]}">${r.title}</div>
         <div class="reco-body">
           <h4>${r.title}</h4>
           <p class="au">${r.author}</p>
