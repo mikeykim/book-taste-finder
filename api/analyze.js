@@ -50,23 +50,50 @@ matchScore는 60~95 사이. 태그는 한국어 2~4개. verdict는 반말로 친
       });
     }
 
-    const geminiData = JSON.parse(geminiText);
+    // Gemini 응답 파싱
+    let geminiData;
+    try {
+      geminiData = JSON.parse(geminiText);
+    } catch (e) {
+      return res.status(502).json({
+        error: 'Gemini response parse failed',
+        detail: geminiText.slice(0, 500)
+      });
+    }
+
     const output = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!output) {
       return res.status(502).json({
         error: 'Gemini returned no text',
-        detail: geminiText.slice(0, 500)
+        detail: JSON.stringify(geminiData).slice(0, 500)
       });
     }
 
-    // JSON 추출
+    // 응답에서 JSON 추출 (코드블록, 앞뒤 텍스트 등 제거)
     let jsonStr = output.trim();
     if (jsonStr.startsWith('```')) {
       jsonStr = jsonStr.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
     }
+    // { } 사이만 추출
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(502).json({
+        error: 'No JSON found in Gemini output',
+        detail: output.slice(0, 500)
+      });
+    }
 
-    const bookData = JSON.parse(jsonStr);
+    let bookData;
+    try {
+      bookData = JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      return res.status(502).json({
+        error: 'Book JSON parse failed',
+        detail: jsonMatch[0].slice(0, 500)
+      });
+    }
+
     return res.status(200).json(bookData);
 
   } catch (err) {
