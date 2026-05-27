@@ -21,39 +21,47 @@ module.exports = async function handler(req, res) {
     const prompt = `이 책 표지 이미지를 분석하세요. title은 책 제목, author는 저자, year는 출판연도(모르면 빈 문자열), tags는 한국어 장르 태그 2~4개, matchScore는 60~95 사이 정수, matchReasons는 이 책의 특징을 설명하는 한국어 문장 3개, verdict는 친근한 반말 한 줄 평가.`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-
-    const geminiRes = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 1024,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'object',
-            properties: {
-              title:        { type: 'string' },
-              author:       { type: 'string' },
-              year:         { type: 'string' },
-              tags:         { type: 'array', items: { type: 'string' } },
-              matchScore:   { type: 'integer' },
-              matchReasons: { type: 'array', items: { type: 'string' } },
-              verdict:      { type: 'string' }
-            },
-            required: ['title', 'author', 'tags', 'matchScore', 'matchReasons', 'verdict']
-          }
+    const reqBody = JSON.stringify({
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1024,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'object',
+          properties: {
+            title:        { type: 'string' },
+            author:       { type: 'string' },
+            year:         { type: 'string' },
+            tags:         { type: 'array', items: { type: 'string' } },
+            matchScore:   { type: 'integer' },
+            matchReasons: { type: 'array', items: { type: 'string' } },
+            verdict:      { type: 'string' }
+          },
+          required: ['title', 'author', 'tags', 'matchScore', 'matchReasons', 'verdict']
         }
-      })
+      }
     });
 
-    const geminiText = await geminiRes.text();
+    // 최대 3회 재시도 (503 과부하 대응)
+    let geminiRes, geminiText;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 2000));
+
+      geminiRes = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: reqBody
+      });
+      geminiText = await geminiRes.text();
+
+      if (geminiRes.ok || (geminiRes.status !== 503 && geminiRes.status !== 429)) break;
+    }
 
     if (!geminiRes.ok) {
       return res.status(502).json({
