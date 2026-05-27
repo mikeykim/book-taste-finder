@@ -58,7 +58,7 @@ html,body{
   flex-shrink:0;
   display:flex;justify-content:space-around;align-items:center;
   background:var(--card);
-  padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+  padding:6px 4px calc(4px + env(safe-area-inset-bottom));
   box-shadow:0 -1px 6px rgba(0,0,0,.06);
 }
 .nav-btn{
@@ -78,15 +78,15 @@ html,body{
 .nav-btn.active .ic{background:var(--hover);}
 
 /* ====== 1. CAPTURE SCREEN ====== */
-#screen-capture{padding:16px 16px 0;justify-content:flex-start;}
-.capture-header{text-align:center;margin-bottom:10px;}
+#screen-capture{padding:10px 16px 0;justify-content:flex-start;}
+.capture-header{text-align:center;margin-bottom:6px;}
 .capture-header h1{font-family:'Jua',sans-serif;font-size:1.35rem;font-weight:400;}
-.capture-header p{font-size:.78rem;color:var(--text2);margin-top:2px;}
+.capture-header p{font-size:.78rem;color:var(--text2);margin-top:1px;}
 
 .camera-wrap{
   position:relative;flex:1;min-height:0;
   border-radius:var(--r-l);overflow:hidden;
-  background:#000;margin-bottom:12px;
+  background:#000;margin-bottom:6px;
 }
 #camera-feed{
   width:100%;height:100%;object-fit:cover;
@@ -107,7 +107,7 @@ html,body{
 
 .shutter-row{
   display:flex;justify-content:center;align-items:center;
-  padding-bottom:12px;gap:16px;
+  padding-bottom:4px;gap:14px;
 }
 #shutter-btn{
   width:64px;height:64px;border-radius:50%;
@@ -125,12 +125,26 @@ html,body{
   display:flex;align-items:center;justify-content:center;
 }
 #gallery-input{display:none;}
+.quokka-ask{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  margin-top:-4px;
+}
+.quokka-bubble{
+  background:var(--card);box-shadow:var(--sh-s);
+  border-radius:var(--r-m);padding:3px 10px;
+  font-family:'Jua',sans-serif;font-size:.68rem;color:var(--text2);
+  white-space:nowrap;position:relative;
+}
+.quokka-bubble::after{
+  content:"";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:6px;height:6px;background:var(--card);box-shadow:1px 1px 1px rgba(0,0,0,.04);
+}
 
 /* Canvas for capture */
 #capture-canvas{display:none;}
 
 /* ====== 2. MATCH RESULT ====== */
-#screen-match{align-items:center;justify-content:center;text-align:center;padding-top:24px;}
+#screen-match{align-items:center;justify-content:flex-start;text-align:center;padding-top:30px;}
 .match-verdict{font-family:'Jua',sans-serif;font-size:1.3rem;line-height:1.35;margin-bottom:8px;}
 .match-verdict .hl{background:var(--butter);padding:1px 6px;border-radius:8px;}
 .match-stage{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:14px;}
@@ -198,7 +212,7 @@ html,body{
 .shelf-empty .big{font-size:2rem;margin-bottom:8px;}
 
 /* ====== 4. CHARACTER ====== */
-#screen-character{align-items:center;padding-top:8px;}
+#screen-character{align-items:center;padding-top:10px;}
 .char-profile{
   width:100%;background:var(--bg);border-radius:var(--r-l);
   padding:18px 16px 14px;text-align:center;margin-bottom:14px;
@@ -313,58 +327,126 @@ html,body{
 </head>
 <body>
 
-<!-- ====== SVG CHARACTERS ====== -->
+<!-- ====== SVG QUOKKA CHARACTERS ====== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
 <defs>
+  <!-- QUOKKA HAPPY: 웃는 쿼카, 책 들고 있음 -->
   <symbol id="char-happy" viewBox="0 0 140 160">
-    <ellipse cx="42" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <ellipse cx="98" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <ellipse cx="42" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
-    <ellipse cx="98" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
-    <ellipse cx="70" cy="86" rx="52" ry="54" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <path d="M28 100 q42 24 84 0 l-4 14 q-38 18 -76 0z" fill="var(--pink)" stroke="#37352F" stroke-width="1.5"/>
-    <path d="M48 76 q8-8 16 0" stroke="#37352F" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path d="M76 76 q8-8 16 0" stroke="#37352F" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <ellipse cx="48" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
-    <ellipse cx="92" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
-    <path d="M62 94 q8 6 16 0" stroke="#37352F" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <rect x="42" y="120" width="56" height="30" rx="6" fill="var(--mint)" stroke="#37352F" stroke-width="2"/>
-    <line x1="70" y1="120" x2="70" y2="150" stroke="#37352F" stroke-width="1.5"/>
+    <!-- 귀 -->
+    <ellipse cx="40" cy="30" rx="12" ry="10" fill="#C8A882" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="100" cy="30" rx="12" ry="10" fill="#C8A882" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="40" cy="30" rx="6" ry="5" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="100" cy="30" rx="6" ry="5" fill="var(--char-blush)" opacity=".5"/>
+    <!-- 머리 -->
+    <ellipse cx="70" cy="62" rx="40" ry="38" fill="#D4B896" stroke="#37352F" stroke-width="2"/>
+    <!-- 얼굴 밝은 부분 -->
+    <ellipse cx="70" cy="70" rx="28" ry="24" fill="#E8D5B8"/>
+    <!-- 눈 -->
+    <circle cx="56" cy="58" r="5" fill="#37352F"/>
+    <circle cx="84" cy="58" r="5" fill="#37352F"/>
+    <circle cx="58" cy="56" r="1.5" fill="#fff"/>
+    <circle cx="86" cy="56" r="1.5" fill="#fff"/>
+    <!-- 코 -->
+    <ellipse cx="70" cy="70" rx="5" ry="3.5" fill="#8B6B4A" stroke="#37352F" stroke-width="1"/>
+    <!-- 볼 -->
+    <ellipse cx="48" cy="74" rx="7" ry="4" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="92" cy="74" rx="7" ry="4" fill="var(--char-blush)" opacity=".5"/>
+    <!-- 입 (활짝 웃음) -->
+    <path d="M60 78 q10 8 20 0" stroke="#37352F" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- 몸통 -->
+    <ellipse cx="70" cy="118" rx="34" ry="30" fill="#D4B896" stroke="#37352F" stroke-width="2"/>
+    <!-- 배 밝은 부분 -->
+    <ellipse cx="70" cy="122" rx="22" ry="20" fill="#E8D5B8"/>
+    <!-- 발 -->
+    <ellipse cx="50" cy="146" rx="12" ry="6" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="90" cy="146" rx="12" ry="6" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <!-- 책 들고 있음 -->
+    <rect x="44" y="108" width="52" height="26" rx="4" fill="var(--mint)" stroke="#37352F" stroke-width="1.5"/>
+    <line x1="70" y1="108" x2="70" y2="134" stroke="#37352F" stroke-width="1.2"/>
   </symbol>
+
+  <!-- QUOKKA THINK: 생각하는 쿼카 -->
   <symbol id="char-think" viewBox="0 0 140 160">
-    <ellipse cx="42" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <ellipse cx="98" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <ellipse cx="42" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
-    <ellipse cx="98" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
-    <ellipse cx="70" cy="86" rx="52" ry="54" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <path d="M28 100 q42 24 84 0 l-4 14 q-38 18 -76 0z" fill="var(--lavender)" stroke="#37352F" stroke-width="1.5"/>
-    <circle cx="56" cy="78" r="3" fill="#37352F"/>
-    <circle cx="84" cy="78" r="3" fill="#37352F"/>
-    <ellipse cx="70" cy="96" rx="3" ry="2" fill="#37352F"/>
-    <ellipse cx="48" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
-    <ellipse cx="92" cy="92" rx="6" ry="4" fill="var(--char-blush)" opacity=".6"/>
-    <circle cx="118" cy="38" r="3" fill="var(--white)" stroke="#37352F" stroke-width="1.5"/>
-    <circle cx="126" cy="26" r="5" fill="var(--white)" stroke="#37352F" stroke-width="1.5"/>
-    <text x="124" y="30" font-family="Jua,sans-serif" font-size="8" fill="#37352F" text-anchor="middle">?</text>
-    <rect x="42" y="120" width="56" height="30" rx="6" fill="var(--peach)" stroke="#37352F" stroke-width="2"/>
-    <line x1="70" y1="120" x2="70" y2="150" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="40" cy="30" rx="12" ry="10" fill="#C8A882" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="100" cy="30" rx="12" ry="10" fill="#C8A882" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="40" cy="30" rx="6" ry="5" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="100" cy="30" rx="6" ry="5" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="70" cy="62" rx="40" ry="38" fill="#D4B896" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="70" cy="70" rx="28" ry="24" fill="#E8D5B8"/>
+    <!-- 눈 (둥글게 뜬 눈) -->
+    <circle cx="56" cy="58" r="4.5" fill="#37352F"/>
+    <circle cx="84" cy="58" r="4.5" fill="#37352F"/>
+    <circle cx="57.5" cy="56.5" r="1.5" fill="#fff"/>
+    <circle cx="85.5" cy="56.5" r="1.5" fill="#fff"/>
+    <ellipse cx="70" cy="70" rx="5" ry="3.5" fill="#8B6B4A" stroke="#37352F" stroke-width="1"/>
+    <ellipse cx="48" cy="74" rx="7" ry="4" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="92" cy="74" rx="7" ry="4" fill="var(--char-blush)" opacity=".5"/>
+    <!-- 입 (동그란 입) -->
+    <ellipse cx="70" cy="80" rx="3.5" ry="3" fill="#37352F"/>
+    <!-- 생각 말풍선 -->
+    <circle cx="114" cy="36" r="3" fill="var(--white)" stroke="#37352F" stroke-width="1.5"/>
+    <circle cx="122" cy="24" r="5" fill="var(--white)" stroke="#37352F" stroke-width="1.5"/>
+    <text x="120" y="28" font-family="Jua,sans-serif" font-size="8" fill="#37352F" text-anchor="middle">?</text>
+    <ellipse cx="70" cy="118" rx="34" ry="30" fill="#D4B896" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="70" cy="122" rx="22" ry="20" fill="#E8D5B8"/>
+    <ellipse cx="50" cy="146" rx="12" ry="6" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="90" cy="146" rx="12" ry="6" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <rect x="44" y="108" width="52" height="26" rx="4" fill="var(--peach)" stroke="#37352F" stroke-width="1.5"/>
+    <line x1="70" y1="108" x2="70" y2="134" stroke="#37352F" stroke-width="1.2"/>
   </symbol>
+
+  <!-- QUOKKA EXCITED: 신난 쿼카 -->
   <symbol id="char-excited" viewBox="0 0 140 160">
-    <ellipse cx="42" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <ellipse cx="98" cy="34" rx="14" ry="16" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <ellipse cx="42" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
-    <ellipse cx="98" cy="36" rx="6" ry="8" fill="var(--char-blush)"/>
-    <ellipse cx="70" cy="86" rx="52" ry="54" fill="var(--char-body)" stroke="#37352F" stroke-width="2"/>
-    <path d="M28 100 q42 24 84 0 l-4 14 q-38 18 -76 0z" fill="var(--butter)" stroke="#37352F" stroke-width="1.5"/>
-    <path d="M56 72 l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1z" fill="#E8A93A" stroke="#37352F" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M84 72 l2 5 5 1-4 4 1 5-4-2-4 2 1-5-4-4 5-1z" fill="#E8A93A" stroke="#37352F" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M58 94 q12 10 24 0 q-12 4-24 0z" fill="var(--coral)" stroke="#37352F" stroke-width="1.5" stroke-linejoin="round"/>
-    <ellipse cx="44" cy="94" rx="6" ry="4" fill="var(--char-blush)"/>
-    <ellipse cx="96" cy="94" rx="6" ry="4" fill="var(--char-blush)"/>
-    <rect x="34" y="110" width="72" height="30" rx="6" fill="var(--sky)" stroke="#37352F" stroke-width="2"/>
-    <line x1="70" y1="110" x2="70" y2="140" stroke="#37352F" stroke-width="1.5"/>
-    <text x="20" y="60" font-size="16" fill="#E8A93A">✦</text>
-    <text x="116" y="76" font-size="12" fill="#E8A93A">✦</text>
+    <ellipse cx="40" cy="30" rx="12" ry="10" fill="#C8A882" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="100" cy="30" rx="12" ry="10" fill="#C8A882" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="40" cy="30" rx="6" ry="5" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="100" cy="30" rx="6" ry="5" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="70" cy="62" rx="40" ry="38" fill="#D4B896" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="70" cy="70" rx="28" ry="24" fill="#E8D5B8"/>
+    <!-- 반짝 눈 -->
+    <path d="M52 54 l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1z" fill="#E8A93A" stroke="#37352F" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M80 54 l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1z" fill="#E8A93A" stroke="#37352F" stroke-width="1" stroke-linejoin="round"/>
+    <ellipse cx="70" cy="70" rx="5" ry="3.5" fill="#8B6B4A" stroke="#37352F" stroke-width="1"/>
+    <ellipse cx="46" cy="74" rx="7" ry="4" fill="var(--char-blush)" opacity=".6"/>
+    <ellipse cx="94" cy="74" rx="7" ry="4" fill="var(--char-blush)" opacity=".6"/>
+    <!-- 활짝 웃는 입 -->
+    <path d="M56 78 q14 12 28 0 q-14 4-28 0z" fill="var(--coral)" stroke="#37352F" stroke-width="1.5" stroke-linejoin="round"/>
+    <!-- 반짝 -->
+    <text x="18" y="48" font-size="14" fill="#E8A93A">✦</text>
+    <text x="116" y="52" font-size="10" fill="#E8A93A">✦</text>
+    <ellipse cx="70" cy="118" rx="34" ry="30" fill="#D4B896" stroke="#37352F" stroke-width="2"/>
+    <ellipse cx="70" cy="122" rx="22" ry="20" fill="#E8D5B8"/>
+    <ellipse cx="50" cy="146" rx="12" ry="6" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="90" cy="146" rx="12" ry="6" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <rect x="38" y="106" width="64" height="28" rx="4" fill="var(--sky)" stroke="#37352F" stroke-width="1.5"/>
+    <line x1="70" y1="106" x2="70" y2="134" stroke="#37352F" stroke-width="1.2"/>
+  </symbol>
+
+  <!-- QUOKKA PEEK: 작은 쿼카 (셔터 옆용) -->
+  <symbol id="char-peek" viewBox="0 0 100 80">
+    <!-- 귀 -->
+    <ellipse cx="28" cy="16" rx="9" ry="7" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="62" cy="16" rx="9" ry="7" fill="#C8A882" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="28" cy="16" rx="4" ry="3" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="62" cy="16" rx="4" ry="3" fill="var(--char-blush)" opacity=".5"/>
+    <!-- 머리 -->
+    <ellipse cx="45" cy="36" rx="28" ry="24" fill="#D4B896" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="45" cy="42" rx="18" ry="15" fill="#E8D5B8"/>
+    <!-- 눈 -->
+    <circle cx="36" cy="34" r="3.5" fill="#37352F"/>
+    <circle cx="54" cy="34" r="3.5" fill="#37352F"/>
+    <circle cx="37.2" cy="32.5" r="1.2" fill="#fff"/>
+    <circle cx="55.2" cy="32.5" r="1.2" fill="#fff"/>
+    <!-- 코 -->
+    <ellipse cx="45" cy="42" rx="3.5" ry="2.5" fill="#8B6B4A" stroke="#37352F" stroke-width=".8"/>
+    <!-- 볼 -->
+    <ellipse cx="32" cy="46" rx="5" ry="3" fill="var(--char-blush)" opacity=".5"/>
+    <ellipse cx="58" cy="46" rx="5" ry="3" fill="var(--char-blush)" opacity=".5"/>
+    <!-- 웃는 입 -->
+    <path d="M39 49 q6 5 12 0" stroke="#37352F" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- 몸 (살짝만) -->
+    <ellipse cx="45" cy="68" rx="20" ry="14" fill="#D4B896" stroke="#37352F" stroke-width="1.5"/>
+    <ellipse cx="45" cy="70" rx="13" ry="9" fill="#E8D5B8"/>
   </symbol>
 </defs>
 </svg>
@@ -390,7 +472,10 @@ html,body{
     <div class="shutter-row">
       <button id="gallery-btn" title="갤러리에서 선택">🖼️</button>
       <button id="shutter-btn"><span class="inner"></span></button>
-      <div style="width:42px"></div>
+      <div class="quokka-ask">
+        <div class="quokka-bubble">어떤 책일까...?</div>
+        <svg width="48" height="40"><use href="#char-peek"/></svg>
+      </div>
     </div>
     <input type="file" id="gallery-input" accept="image/*">
     <canvas id="capture-canvas"></canvas>
@@ -417,7 +502,7 @@ html,body{
   <!-- ====== 5. RECOMMENDATIONS ====== -->
   <div class="screen" id="screen-reco">
     <h2 class="screen-title">다음에 읽을 책</h2>
-    <p class="screen-sub">포근이가 골랐어요</p>
+    <p class="screen-sub">쿼카가 골랐어요</p>
     <div id="reco-body"></div>
   </div>
 
@@ -440,7 +525,7 @@ html,body{
   <div class="loading-anim">
     <svg width="110" height="126"><use href="#char-think"/></svg>
   </div>
-  <div class="loading-text">포근이가 읽어보는 중…</div>
+  <div class="loading-text">쿼카가 읽어보는 중…</div>
   <div class="loading-sub">표지를 분석하고 있어요</div>
 </div>
 
@@ -606,7 +691,7 @@ const AI = {
       '조용한 페이지 위의 여행자'
     ];
     return {
-      name: '포근이',
+      name: '쿼카',
       epithet: epithets[Math.floor(Math.random() * epithets.length)],
       traits,
       topTags,
@@ -652,7 +737,7 @@ const UI = {
         <svg width="110" height="126"><use href="#char-happy"/></svg>
       </div>
       <div class="match-bar-wrap">
-        <div class="match-bar-head"><span>포근이의 취향 일치도</span><span class="score">${result.matchScore}%</span></div>
+        <div class="match-bar-head"><span>쿼카의 취향 일치도</span><span class="score">${result.matchScore}%</span></div>
         <div class="match-bar"><div class="fill" style="width:0%"></div></div>
       </div>
       <div class="match-reasons">
