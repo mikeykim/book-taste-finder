@@ -645,7 +645,12 @@ const Camera = {
    AI (Mock → swap to real API later)
 ============================================= */
 const PASTELS = ['var(--pink)','var(--mint)','var(--peach)','var(--lavender)','var(--sky)','var(--butter)','var(--coral)','var(--sage)'];
-function randomPastel() { return PASTELS[Math.floor(Math.random() * PASTELS.length)]; }
+let _pastelIdx = Math.floor(Math.random() * PASTELS.length);
+function randomPastel() {
+  // 셔플 순환: 이전 색과 겹치지 않게 2~3칸 건너뜀
+  _pastelIdx = (_pastelIdx + 2 + Math.floor(Math.random() * 2)) % PASTELS.length;
+  return PASTELS[_pastelIdx];
+}
 
 const AI = {
   async analyzeCover(imageBase64) {
@@ -839,7 +844,8 @@ const UI = {
       const b = books[i];
       const heights = [82, 88, 94, 100];
       const h = heights[Math.floor(Math.random() * heights.length)];
-      html += `<div class="shelf-book" style="background:${b.color || randomPastel()};height:${h}px" data-id="${b.id}"><span class="spine">${b.title}</span></div>`;
+      const bookColor = b.color || PASTELS[(i * 3 + 1) % PASTELS.length];
+      html += `<div class="shelf-book" style="background:${bookColor};height:${h}px" data-id="${b.id}"><span class="spine">${b.title}</span></div>`;
       if ((i + 1) % perRow === 0 || i === books.length - 1) html += '</div><div class="shelf-plank"></div>';
     }
     body.innerHTML = html;
