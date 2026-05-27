@@ -61,26 +61,49 @@ matchScore는 60~95 사이. 태그는 한국어 2~4개. verdict는 반말로 친
       });
     }
 
-    const output = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    // 모든 parts에서 JSON 찾기 (2.5 Flash는 thinking part가 별도로 옴)
+    const parts = geminiData.candidates?.[0]?.content?.parts || [];
 
-    if (!output) {
+    if (parts.length === 0) {
       return res.status(502).json({
-        error: 'Gemini returned no text',
-        detail: JSON.stringify(geminiData).slice(0, 500)
+        error: 'Gemini returned no parts',
+        detail: JSON.stringify(geminiData).slice(0, 800)
       });
     }
 
-    // 응답에서 JSON 추출 (코드블록, 앞뒤 텍스트 등 제거)
-    let jsonStr = output.trim();
-    if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+    // thinking이 아닌 파트들에서 텍스트 수집
+    let allText = '';
+    for (const part of parts) {
+      if (part.thought) continue; // thinking 파트 건너뛰기
+      if (part.text) allText += part.text + '\n';
     }
-    // { } 사이만 추출
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+
+    // allText가 비어있으면 thinking 포함해서 다시 시도
+    if (!allText.trim()) {
+      for (const part of parts) {
+        if (part.text) allText += part.text + '\n';
+      }
+    }
+
+    if (!allText.trim()) {
+      return res.status(502).json({
+        error: 'No text in any part',
+        detail: JSON.stringify(parts).slice(0, 800)
+      });
+    }
+
+    // 코드블록 제거
+    let cleaned = allText.trim();
+    if (cleaned.includes('```')) {
+      cleaned = cleaned.replace(/```(?:json)?\s*/g, '').replace(/```/g, '');
+    }
+
+    // { } 사이 JSON 추출
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return res.status(502).json({
-        error: 'No JSON found in Gemini output',
-        detail: output.slice(0, 500)
+        error: 'No JSON in output',
+        rawText: allText.slice(0, 800)
       });
     }
 
@@ -89,8 +112,8 @@ matchScore는 60~95 사이. 태그는 한국어 2~4개. verdict는 반말로 친
       bookData = JSON.parse(jsonMatch[0]);
     } catch (e) {
       return res.status(502).json({
-        error: 'Book JSON parse failed',
-        detail: jsonMatch[0].slice(0, 500)
+        error: 'JSON parse failed: ' + e.message,
+        rawJson: jsonMatch[0].slice(0, 800)
       });
     }
 

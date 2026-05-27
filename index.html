@@ -570,10 +570,10 @@ const AI = {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        const errMsg = data?.error || ('HTTP ' + res.status);
-        throw new Error(errMsg);
+        const errMsg = [data?.error, data?.detail, data?.rawText].filter(Boolean).join('\n\n');
+        throw new Error(errMsg || ('HTTP ' + res.status));
       }
-      if (!data || !data.title) throw new Error('응답에 책 정보가 없어요: ' + JSON.stringify(data).slice(0,100));
+      if (!data || !data.title) throw new Error('응답에 책 정보가 없어요: ' + JSON.stringify(data).slice(0,200));
       return data;
     }
     // Mock (로컬 테스트용)
