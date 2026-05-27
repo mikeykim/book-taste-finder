@@ -1,14 +1,23 @@
+const ALLOWED_ORIGINS = ['https://book-taste-finder.vercel.app'];
+
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   try {
-    const { books } = req.body;
+    const { books } = req.body || {};
     if (!books || !Array.isArray(books) || books.length < 2) {
       return res.status(400).json({ error: '최소 2권의 책 기록이 필요해요' });
+    }
+
+    // 입력 검증: 배열 크기 + 각 항목 형태
+    if (books.length > 50) {
+      return res.status(400).json({ error: '너무 많은 책 데이터에요' });
     }
 
     const API_KEY = process.env.GEMINI_API_KEY;
@@ -67,15 +76,17 @@ JSON 배열로만 응답해.`;
     }
 
     if (!geminiRes.ok) {
+      console.error('Gemini HTTP ' + geminiRes.status, geminiText.slice(0, 300));
+      const isRateLimit = geminiRes.status === 429 || geminiRes.status === 503;
       return res.status(502).json({
-        error: 'Gemini HTTP ' + geminiRes.status,
-        detail: geminiText.slice(0, 300)
+        error: isRateLimit ? '잠시 요청이 많았어요. 1분 후 다시 시도해주세요' : '추천을 불러오지 못했어요'
       });
     }
 
     let geminiData;
     try { geminiData = JSON.parse(geminiText); } catch (e) {
-      return res.status(502).json({ error: 'Response parse failed' });
+      console.error('Parse fail:', geminiText.slice(0, 300));
+      return res.status(502).json({ error: '추천 결과를 읽지 못했어요' });
     }
 
     const parts = geminiData.candidates?.[0]?.content?.parts || [];
@@ -91,12 +102,16 @@ JSON 배열로만 응답해.`;
     } catch (e) {
       const m = outputText.match(/\[[\s\S]*\]/);
       if (m) recommendations = JSON.parse(m[0]);
-      else return res.status(502).json({ error: 'No JSON array', rawText: outputText.slice(0, 500) });
+      else {
+        console.error('Unparseable reco:', outputText.slice(0, 300));
+        return res.status(502).json({ error: '추천 목록을 만들지 못했어요' });
+      }
     }
 
     return res.status(200).json(recommendations);
 
   } catch (err) {
-    return res.status(500).json({ error: 'Server error: ' + err.message });
+    console.error('Recommend error:', err.message);
+    return res.status(500).json({ error: '서버 오류가 발생했어요' });
   }
 };

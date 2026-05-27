@@ -1,5 +1,9 @@
+const ALLOWED_ORIGINS = ['https://book-taste-finder.vercel.app'];
+
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -8,7 +12,17 @@ module.exports = async function handler(req, res) {
   try {
     const body = req.body;
     if (!body || !body.image) {
-      return res.status(400).json({ error: 'no image in body' });
+      return res.status(400).json({ error: '이미지가 필요해요' });
+    }
+
+    // 입력 검증: base64 이미지 크기 제한 (약 4MB)
+    if (typeof body.image !== 'string' || body.image.length > 5500000) {
+      return res.status(400).json({ error: '이미지가 너무 커요' });
+    }
+
+    // data URL 형식 검증
+    if (!body.image.startsWith('data:image/')) {
+      return res.status(400).json({ error: '올바른 이미지 형식이 아니에요' });
     }
 
     const API_KEY = process.env.GEMINI_API_KEY;
@@ -76,9 +90,10 @@ module.exports = async function handler(req, res) {
     }
 
     if (!geminiRes.ok) {
+      console.error('Gemini HTTP ' + geminiRes.status, geminiText.slice(0, 300));
+      const isRateLimit = geminiRes.status === 429 || geminiRes.status === 503;
       return res.status(502).json({
-        error: 'Gemini HTTP ' + geminiRes.status,
-        detail: geminiText.slice(0, 500)
+        error: isRateLimit ? '잠시 요청이 많았어요. 1분 후 다시 시도해주세요' : '분석에 실패했어요. 다시 시도해주세요'
       });
     }
 
@@ -86,10 +101,8 @@ module.exports = async function handler(req, res) {
     try {
       geminiData = JSON.parse(geminiText);
     } catch (e) {
-      return res.status(502).json({
-        error: 'Gemini response not JSON',
-        detail: geminiText.slice(0, 500)
-      });
+      console.error('Gemini parse fail:', geminiText.slice(0, 300));
+      return res.status(502).json({ error: '분석 결과를 읽지 못했어요' });
     }
 
     // 모든 parts에서 텍스트 수집 (thinking 파트 제외)
@@ -101,10 +114,8 @@ module.exports = async function handler(req, res) {
     }
 
     if (!outputText) {
-      return res.status(502).json({
-        error: 'No output text',
-        detail: JSON.stringify(geminiData).slice(0, 800)
-      });
+      console.error('Empty output:', JSON.stringify(geminiData).slice(0, 300));
+      return res.status(502).json({ error: '분석 결과가 비어있어요' });
     }
 
     let bookData;
@@ -116,18 +127,15 @@ module.exports = async function handler(req, res) {
       if (m) {
         bookData = JSON.parse(m[0]);
       } else {
-        return res.status(502).json({
-          error: 'Output not parseable',
-          rawText: outputText.slice(0, 800)
-        });
+        console.error('Unparseable:', outputText.slice(0, 300));
+        return res.status(502).json({ error: '책 정보를 추출하지 못했어요' });
       }
     }
 
     return res.status(200).json(bookData);
 
   } catch (err) {
-    return res.status(500).json({
-      error: 'Server error: ' + err.message
-    });
+    console.error('Handler error:', err.message);
+    return res.status(500).json({ error: '서버 오류가 발생했어요' });
   }
 };
