@@ -48,6 +48,7 @@ verdict는 반말로 친근하게 작성해주세요.`;
   // 모델 목록 (순서대로 시도)
   const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 
+  let lastError = '';
   for (const model of models) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
@@ -71,15 +72,15 @@ verdict는 반말로 친근하게 작성해주세요.`;
 
       if (!geminiRes.ok) {
         const errText = await geminiRes.text();
-        console.error(`[${model}] Gemini HTTP ${geminiRes.status}:`, errText);
-        continue; // 다음 모델 시도
+        lastError = `[${model}] HTTP ${geminiRes.status}: ${errText.slice(0, 200)}`;
+        continue;
       }
 
       const geminiData = await geminiRes.json();
       const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (!text) {
-        console.error(`[${model}] Empty response:`, JSON.stringify(geminiData));
+        lastError = `[${model}] Empty response: ${JSON.stringify(geminiData).slice(0, 200)}`;
         continue;
       }
 
@@ -93,10 +94,10 @@ verdict는 반말로 친근하게 작성해주세요.`;
       return res.status(200).json(bookData);
 
     } catch (err) {
-      console.error(`[${model}] Error:`, err.message);
+      lastError = `[${model}] Exception: ${err.message}`;
       continue;
     }
   }
 
-  return res.status(502).json({ error: 'All AI models failed' });
+  return res.status(502).json({ error: lastError || 'All AI models failed' });
 };
